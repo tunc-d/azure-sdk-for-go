@@ -61,6 +61,12 @@ azlog.SetListener(func(event azlog.Event, s string) {
 azlog.SetEvents(azlog.EventRequest, azlog.EventResponse, azlog.EventRetryPolicy, azlog.EventResponseError) 
 ```
 
+### Per-attempt timeouts and write safety
+
+`ClientOptions.Retry.TryTimeout` limits an individual attempt, not the caller's entire operation. An eligible read may retry an expired attempt while the caller's context remains active. A write may do so only when its original transport error retains evidence that the request was not sent, such as a dial or DNS failure. A bare deadline error, an ambiguous connection failure, or a protected response-body failure does not permit write replay.
+
+The HTTP transport can discard dial-error details when a context expires. Such errors remain protected; the SDK does not reconstruct missing transport evidence. Eligible retries still honor outer retry settings, internal retry budgets, regional routing restrictions, and the remaining internal backoff. A new attempt can expire while finishing that backoff without sending another request.
+
 ## Examples
 
 The following section provides several code snippets covering some of the most common Azure Cosmos DB NoSQL API tasks, including:

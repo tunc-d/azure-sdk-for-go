@@ -249,7 +249,7 @@ func TestReadAttemptTimeoutBoundaries(t *testing.T) {
 			err := timeoutTestCall(ctx, c, op)
 			t.Logf("outer=%d sends=%d error=%v", counter.attempts, sends, err)
 			switch mode {
-			case "recover":
+			case "recover", "write-dial":
 				require.NoError(t, err)
 				assert.Equal(t, 2, sends)
 				assert.Equal(t, 2, counter.attempts)
@@ -340,14 +340,14 @@ func TestReadAttemptTimeoutResumesRoutingAndReservation(t *testing.T) {
 	state := retryContext{retryCount: 2, sessionRetryCount: 1, preferredLocationIndex: 1,
 		serverErrorRetryCount: 1, sameRegionRetryCount: 3, crossRegionFailoverDone: true,
 		requestTimeoutRetryDone: true, resolveFromHead: true, retryNotBefore: time.Now().Add(30 * time.Millisecond)}
-	req.SetOperationValue(interruptedReadRetry{state: state, err: context.DeadlineExceeded})
+	req.SetOperationValue(interruptedRetry{state: state, err: context.DeadlineExceeded})
 	start := time.Now()
 	_, err = pipeline.Do(req)
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, time.Since(start), 30*time.Millisecond)
 	state.retryNotBefore = time.Time{}
 	assert.Equal(t, state, observed)
-	var consumed interruptedReadRetry
+	var consumed interruptedRetry
 	require.True(t, req.OperationValue(&consumed))
 	assert.Nil(t, consumed.err)
 }

@@ -12,6 +12,7 @@
 ### Bugs Fixed
 
 * Restored eligible read retries when a per-attempt timeout expires. Interrupted connection-error and HTTP 408 retries retain their internal budgets, routing state, and remaining backoff. Caller cancellation, independent retry vetoes, and write protection are unchanged.
+* Restored eligible write retries after a per-attempt timeout only when the original transport error retains evidence that the request was not sent. Missing or ambiguous evidence (including native HTTP cancellations that erase dial errors) still prevents replay. Interrupted retries retain their internal budgets, routing state, and remaining backoff.
 
 ### Other Changes
 
